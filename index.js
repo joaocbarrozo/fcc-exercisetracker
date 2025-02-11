@@ -96,9 +96,43 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   } else {
     res.json({'error': 'user not found'});
   }
-  
+});
+
+// Get /api/users/log endpoint
+app.get('/api/users/:_id/logs', (req, res) => {
+  // Create object response
+  let response = {};
+  // Get id from parameters
+  const { _id } = req.params;
+  // Get optional querries
+  const { from, to, limit} = req.query;
+  // Add _id propertie to response
+  response._id = _id;
+  // Get the user from log array by _id
+  const userLog = log.find(user => user._id === _id);
+  // Add username propertie to response
+  response.username = userLog.username;
+  // Filter the log array accordinly with querriies
+  let filteredLog = userLog.log;
+  if (from) {
+    response.from = new Date(from).toDateString();
+    filteredLog = filteredLog.filter(log => new Date(log.date) >= new Date(from));
+  }
+  if (to) {
+    response.to = new Date(to).toDateString();
+    filteredLog = filteredLog.filter(log => new Date(log.date) <= new Date(to))
+  }
+  if (limit) {
+    filteredLog = filteredLog.slice(0, parseInt(limit));
+  }
+  // Add propertie count to response
+  response.count = filteredLog.length;
+  // Add filtered log to response
+  response.log = filteredLog;
+  // Send response
+  res.json(response);
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
-})
+});
